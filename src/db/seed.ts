@@ -28,8 +28,15 @@ async function seed() {
       systemPrompt: "You are the AI assistant for Dapoer Navita, an Indonesian F&B business. You must be polite, helpful, and speak in Indonesian. You help customers with the menu.",
       isFailoverActive: false,
       isStoreOpen: true,
-      openingTime: "09:00",
-      closingTime: "21:00",
+      schedule: {
+        monday: { isOpen: true, open: '09:00', close: '21:00' },
+        tuesday: { isOpen: true, open: '09:00', close: '21:00' },
+        wednesday: { isOpen: true, open: '09:00', close: '21:00' },
+        thursday: { isOpen: true, open: '09:00', close: '21:00' },
+        friday: { isOpen: true, open: '09:00', close: '21:00' },
+        saturday: { isOpen: true, open: '09:00', close: '21:00' },
+        sunday: { isOpen: false, open: '09:00', close: '21:00' },
+      },
     }
   ]).onConflictDoNothing();
 

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { MenuItem } from "@/data/menu";
+import { StoreSchedule } from "@/db/schema";
 
 export type CartItem = MenuItem & { quantity: number };
 
@@ -14,7 +15,7 @@ type CartContextType = {
   updateQuantity: (id: string, quantity: number) => void;
   totalItems: number;
   totalPrice: number;
-  storeSettings: { isStoreOpen: boolean; openingTime: string; closingTime: string } | null;
+  storeSettings: { isStoreOpen: boolean; schedule: StoreSchedule } | null;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -23,7 +24,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [storeSettings, setStoreSettings] = useState<{ isStoreOpen: boolean; openingTime: string; closingTime: string } | null>(null);
+  const [storeSettings, setStoreSettings] = useState<{ isStoreOpen: boolean; schedule: StoreSchedule } | null>(null);
 
   useEffect(() => {
     fetch("/api/settings/store")

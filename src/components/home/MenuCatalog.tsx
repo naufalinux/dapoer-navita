@@ -48,6 +48,12 @@ export default function MenuCatalog() {
       ? menuItems
       : menuItems.filter((item) => item.category.includes(activeCategory));
 
+  const todayIndex = new Date().getDay();
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+  const todayKey = days[todayIndex];
+  const todaySchedule = storeSettings?.schedule[todayKey];
+  const isActuallyOpen = storeSettings?.isStoreOpen && todaySchedule?.isOpen;
+
   return (
     <section id="menu" className="py-20 bg-background">
       <div className="container mx-auto px-4">
@@ -141,7 +147,7 @@ export default function MenuCatalog() {
                         }`}
                       >
                         {isAvailable ? <Plus className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
-                        {isAvailable ? (storeSettings?.isStoreOpen ? "Add" : "Pre-Order") : "Out of Stock"}
+                        {isAvailable ? (isActuallyOpen ? "Add" : "Pre-Order") : "Out of Stock"}
                       </button>
                     </div>
                   </div>

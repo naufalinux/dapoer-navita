@@ -9,8 +9,13 @@ export default function CartDrawer() {
 
   if (!isCartOpen) return null;
 
+  const todayIndex = new Date().getDay();
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+  const todayKey = days[todayIndex];
+  const isActuallyOpen = storeSettings?.isStoreOpen && storeSettings?.schedule[todayKey]?.isOpen;
+
   const handleCheckout = () => {
-    const isClosed = storeSettings && !storeSettings.isStoreOpen;
+    const isClosed = !isActuallyOpen;
     const header = isClosed 
       ? "Halo Dapoer Navita, saya ingin *Pre-Order* untuk jadwal buka selanjutnya:"
       : "Halo Dapoer Navita, saya ingin memesan:";
@@ -105,12 +110,12 @@ export default function CartDrawer() {
             <button 
               onClick={handleCheckout}
               className={`w-full text-white py-4 rounded-xl font-bold text-lg transition-colors shadow-lg ${
-                storeSettings?.isStoreOpen 
+                isActuallyOpen 
                   ? "bg-secondary hover:bg-secondary/90 shadow-secondary/30" 
                   : "bg-orange-500 hover:bg-orange-600 shadow-orange-500/30"
               }`}
             >
-              {storeSettings?.isStoreOpen ? "Order via WhatsApp" : "Pre-Order via WhatsApp"}
+              {isActuallyOpen ? "Order via WhatsApp" : "Pre-Order via WhatsApp"}
             </button>
           </div>
         )}

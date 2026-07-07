@@ -15,8 +15,7 @@ export async function GET() {
       success: true,
       data: {
         isStoreOpen: config[0].isStoreOpen,
-        openingTime: config[0].openingTime,
-        closingTime: config[0].closingTime,
+        schedule: config[0].schedule,
       }
     });
   } catch (error) {
@@ -28,12 +27,11 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { isStoreOpen, openingTime, closingTime } = body;
+    const { isStoreOpen, schedule } = body;
 
     const updateData: any = {};
     if (isStoreOpen !== undefined) updateData.isStoreOpen = isStoreOpen;
-    if (openingTime !== undefined) updateData.openingTime = openingTime;
-    if (closingTime !== undefined) updateData.closingTime = closingTime;
+    if (schedule !== undefined) updateData.schedule = schedule;
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ success: false, message: "No fields to update" }, { status: 400 });

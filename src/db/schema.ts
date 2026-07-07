@@ -1,5 +1,31 @@
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 
+export type DaySchedule = {
+  isOpen: boolean;
+  open: string;
+  close: string;
+};
+
+export type StoreSchedule = {
+  monday: DaySchedule;
+  tuesday: DaySchedule;
+  wednesday: DaySchedule;
+  thursday: DaySchedule;
+  friday: DaySchedule;
+  saturday: DaySchedule;
+  sunday: DaySchedule;
+};
+
+const defaultSchedule: StoreSchedule = {
+  monday: { isOpen: true, open: '09:00', close: '21:00' },
+  tuesday: { isOpen: true, open: '09:00', close: '21:00' },
+  wednesday: { isOpen: true, open: '09:00', close: '21:00' },
+  thursday: { isOpen: true, open: '09:00', close: '21:00' },
+  friday: { isOpen: true, open: '09:00', close: '21:00' },
+  saturday: { isOpen: true, open: '09:00', close: '21:00' },
+  sunday: { isOpen: false, open: '09:00', close: '21:00' },
+};
+
 export const menuItems = sqliteTable('menu_items', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
@@ -26,6 +52,5 @@ export const settings = sqliteTable('settings', {
   systemPrompt: text('system_prompt').notNull(),
   isFailoverActive: integer('is_failover_active', { mode: 'boolean' }).notNull().default(false),
   isStoreOpen: integer('is_store_open', { mode: 'boolean' }).notNull().default(true),
-  openingTime: text('opening_time').notNull().default('09:00'),
-  closingTime: text('closing_time').notNull().default('21:00'),
+  schedule: text('schedule', { mode: 'json' }).$type<StoreSchedule>().notNull().default(defaultSchedule),
 });
