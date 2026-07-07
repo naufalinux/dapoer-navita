@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MessageSquare, X, Send } from "lucide-react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 type Message = {
   id: string;
@@ -11,6 +12,8 @@ type Message = {
 };
 
 export default function ChatbotWidget() {
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith("/admin");
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -40,6 +43,8 @@ export default function ChatbotWidget() {
       setMessages((prev) => [...prev, botMsg]);
     }, 1000);
   };
+
+  if (isAdmin) return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
