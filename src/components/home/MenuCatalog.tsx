@@ -23,7 +23,7 @@ export default function MenuCatalog() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { addItem } = useCart();
+  const { addItem, storeSettings } = useCart();
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -141,7 +141,7 @@ export default function MenuCatalog() {
                         }`}
                       >
                         {isAvailable ? <Plus className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}
-                        {isAvailable ? "Add" : "Out of Stock"}
+                        {isAvailable ? (storeSettings?.isStoreOpen ? "Add" : "Pre-Order") : "Out of Stock"}
                       </button>
                     </div>
                   </div>

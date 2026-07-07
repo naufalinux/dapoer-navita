@@ -1,14 +1,40 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useCart } from "@/context/CartContext";
 
 export default function Hero() {
+  const { storeSettings } = useCart();
+  
   return (
     <section className="relative bg-accent/10 py-20 overflow-hidden">
       <div className="container mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
         <div className="space-y-6 z-10">
-          <span className="inline-block py-1 px-3 rounded-full bg-secondary/10 text-secondary font-semibold text-sm">
-            #1 Catering in Bogor
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="inline-block py-1 px-3 rounded-full bg-secondary/10 text-secondary font-semibold text-sm">
+              #1 Catering in Bogor
+            </span>
+            {storeSettings && (
+              <div className={`inline-flex items-center gap-2 py-1 px-3 rounded-full font-semibold text-sm border ${
+                storeSettings.isStoreOpen 
+                  ? "bg-green-50 text-green-700 border-green-200" 
+                  : "bg-red-50 text-red-700 border-red-200"
+              }`}>
+                <span className="relative flex h-3 w-3">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                    storeSettings.isStoreOpen ? "bg-green-400" : "bg-red-400"
+                  }`}></span>
+                  <span className={`relative inline-flex rounded-full h-3 w-3 ${
+                    storeSettings.isStoreOpen ? "bg-green-500" : "bg-red-500"
+                  }`}></span>
+                </span>
+                {storeSettings.isStoreOpen 
+                  ? `Open Now (${storeSettings.openingTime} - ${storeSettings.closingTime})`
+                  : `Currently Closed (Opens at ${storeSettings.openingTime})`}
+              </div>
+            )}
+          </div>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-foreground leading-tight">
             Taste the Authentic <br />
             <span className="text-primary">Indonesian Flavors</span>

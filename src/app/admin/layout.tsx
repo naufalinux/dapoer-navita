@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, UtensilsCrossed, ClipboardList, BotMessageSquare, Bell, UserCircle } from "lucide-react";
+import { LayoutDashboard, UtensilsCrossed, ClipboardList, BotMessageSquare, Bell, UserCircle, Store } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Menu Management", href: "/admin/menu", icon: UtensilsCrossed },
   { name: "Orders Logs", href: "/admin/orders", icon: ClipboardList },
+  { name: "Store Settings", href: "/admin/store", icon: Store },
   { name: "AI Chatbot Settings", href: "/admin/chatbot", icon: BotMessageSquare },
 ];
 

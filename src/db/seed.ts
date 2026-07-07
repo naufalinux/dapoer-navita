@@ -22,11 +22,16 @@ async function seed() {
   }
 
   console.log('Inserting settings...');
-  await db.insert(settings).values({
-    id: 1,
-    systemPrompt: mockDb.settings.systemPrompt,
-    isFailoverActive: mockDb.settings.isFailoverActive,
-  });
+  await db.insert(settings).values([
+    {
+      id: 1,
+      systemPrompt: "You are the AI assistant for Dapoer Navita, an Indonesian F&B business. You must be polite, helpful, and speak in Indonesian. You help customers with the menu.",
+      isFailoverActive: false,
+      isStoreOpen: true,
+      openingTime: "09:00",
+      closingTime: "21:00",
+    }
+  ]).onConflictDoNothing();
 
   console.log('Database seeded successfully!');
 }

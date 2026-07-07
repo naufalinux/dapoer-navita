@@ -5,16 +5,22 @@ import { X, Minus, Plus, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 
 export default function CartDrawer() {
-  const { items, isCartOpen, setIsCartOpen, updateQuantity, removeItem, totalPrice } = useCart();
+  const { items, isCartOpen, setIsCartOpen, updateQuantity, removeItem, totalPrice, storeSettings } = useCart();
 
   if (!isCartOpen) return null;
 
   const handleCheckout = () => {
+    const isClosed = storeSettings && !storeSettings.isStoreOpen;
+    const header = isClosed 
+      ? "Halo Dapoer Navita, saya ingin *Pre-Order* untuk jadwal buka selanjutnya:"
+      : "Halo Dapoer Navita, saya ingin memesan:";
+
     const message = items
       .map((item) => `${item.quantity}x ${item.name} - Rp ${(item.price * item.quantity).toLocaleString("id-ID")}`)
       .join("%0A");
     const total = `Total: Rp ${totalPrice.toLocaleString("id-ID")}`;
-    const whatsappUrl = `https://wa.me/6282213302131?text=Halo Dapoer Navita, saya ingin memesan:%0A${message}%0A%0A${total}`;
+    
+    const whatsappUrl = `https://wa.me/6282213302131?text=${header}%0A${message}%0A%0A${total}`;
     window.open(whatsappUrl, "_blank");
   };
 
@@ -98,9 +104,13 @@ export default function CartDrawer() {
             </div>
             <button 
               onClick={handleCheckout}
-              className="w-full bg-secondary hover:bg-secondary/90 text-white py-4 rounded-xl font-bold text-lg transition-colors shadow-lg shadow-secondary/30"
+              className={`w-full text-white py-4 rounded-xl font-bold text-lg transition-colors shadow-lg ${
+                storeSettings?.isStoreOpen 
+                  ? "bg-secondary hover:bg-secondary/90 shadow-secondary/30" 
+                  : "bg-orange-500 hover:bg-orange-600 shadow-orange-500/30"
+              }`}
             >
-              Order via WhatsApp
+              {storeSettings?.isStoreOpen ? "Order via WhatsApp" : "Pre-Order via WhatsApp"}
             </button>
           </div>
         )}

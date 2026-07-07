@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { MenuItem } from "@/data/menu";
 
 export type CartItem = MenuItem & { quantity: number };
@@ -14,6 +14,7 @@ type CartContextType = {
   updateQuantity: (id: string, quantity: number) => void;
   totalItems: number;
   totalPrice: number;
+  storeSettings: { isStoreOpen: boolean; openingTime: string; closingTime: string } | null;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -21,6 +22,35 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [storeSettings, setStoreSettings] = useState<{ isStoreOpen: boolean; openingTime: string; closingTime: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/settings/store")
+      .then(res => res.json())
+      .then(json => {
+        if (json.success) setStoreSettings(json.data);
+      })
+      .catch(err => console.error("Failed to fetch store settings", err));
+  }, []);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const savedCart = localStorage.getItem("dapoer_navita_cart");
+    if (savedCart) {
+      try {
+        setItems(JSON.parse(savedCart));
+      } catch (e) {
+        console.error("Failed to parse cart data", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem("dapoer_navita_cart", JSON.stringify(items));
+    }
+  }, [items, isMounted]);
 
   const addItem = (item: MenuItem) => {
     setItems((currentItems) => {
@@ -77,6 +107,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateQuantity,
         totalItems,
         totalPrice,
+        storeSettings,
       }}
     >
       {children}

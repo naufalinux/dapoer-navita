@@ -25,4 +25,7 @@ export const settings = sqliteTable('settings', {
   id: integer('id').primaryKey(),
   systemPrompt: text('system_prompt').notNull(),
   isFailoverActive: integer('is_failover_active', { mode: 'boolean' }).notNull().default(false),
+  isStoreOpen: integer('is_store_open', { mode: 'boolean' }).notNull().default(true),
+  openingTime: text('opening_time').notNull().default('09:00'),
+  closingTime: text('closing_time').notNull().default('21:00'),
 });
