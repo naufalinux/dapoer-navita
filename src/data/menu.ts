@@ -4,7 +4,9 @@ export type MenuItem = {
   description: string;
   price: number;
   image: string;
-  category: string[];
+  category: string;
+  stockQuantity?: number;
+  inStock?: boolean;
 };
 
 export const categories = [
@@ -23,7 +25,7 @@ export const menuData: MenuItem[] = [
     description: "Crispy smashed fried chicken coated in spicy red garlic sambal and generously topped with melted mozzarella cheese.",
     price: 25000,
     image: "/images/nasi_ayam_geprek_1783444096844.png",
-    category: ["Resto's top picks", "Rice Bowl"],
+    category: "Rice Bowl",
   },
   {
     id: "2",
@@ -31,7 +33,7 @@ export const menuData: MenuItem[] = [
     description: "Fluffy white rice topped with salted baby squid deeply coated in a rich, spicy green chili sambal, served with fried egg.",
     price: 25000,
     image: "/images/cumi_cabe_ijo_1783444106607.png",
-    category: ["Resto's top picks", "Rice Bowl"],
+    category: "Rice Bowl",
   },
   {
     id: "3",
@@ -39,7 +41,7 @@ export const menuData: MenuItem[] = [
     description: "Fragrant coconut rice with spicy balado hard-boiled egg, sweet and spicy dry tempeh, stir-fried glass noodles, and peanut sauce.",
     price: 17000,
     image: "/images/nasi_box_uduk_1783444115219.png",
-    category: ["Nasi Box"],
+    category: "Nasi Box",
   },
   {
     id: "4",
@@ -47,7 +49,7 @@ export const menuData: MenuItem[] = [
     description: "Golden, crispy, deep-fried tofu with a savory filling of stir-fried shredded carrots, cabbage, and bean sprouts.",
     price: 11000,
     image: "/images/tahu_berontak_1783444124629.png",
-    category: ["Gorengan"],
+    category: "Gorengan",
   },
   {
     id: "5",
@@ -55,6 +57,6 @@ export const menuData: MenuItem[] = [
     description: "Rich sweet mung bean porridge infused with palm sugar, topped with thick white coconut milk and evaporated milk.",
     price: 10000,
     image: "/images/bubur_kacang_ijo_1783444137461.png",
-    category: ["Camilan/Takjil"],
+    category: "Camilan/Takjil",
   },
 ];
