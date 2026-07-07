@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { mockDb } from "@/lib/mockDb";
+import { db } from "@/db";
+import { settings } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
   try {
@@ -14,8 +16,11 @@ export async function POST(request: Request) {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const aiEngine = mockDb.settings.isFailoverActive ? "Qwen 3 (Failover)" : "Gemini 2.5 Flash-lite";
-    const systemPromptContext = mockDb.settings.systemPrompt;
+    // Fetch settings from DB
+    const settingsData = await db.select().from(settings).where(eq(settings.id, 1));
+    const currentSettings = settingsData[0] || { isFailoverActive: false, systemPrompt: "" };
+
+    const aiEngine = currentSettings.isFailoverActive ? "Qwen 3 (Failover)" : "Gemini 2.5 Flash-lite";
 
     let responseText = `[Powered by ${aiEngine}]\n\nTerima kasih atas pesannya! `;
     

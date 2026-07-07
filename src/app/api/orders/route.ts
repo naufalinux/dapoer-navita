@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
-import { mockDb } from "@/lib/mockDb";
+import { db } from "@/db";
+import { orders } from "@/db/schema";
+import { desc } from "drizzle-orm";
 
 export async function GET() {
-  return NextResponse.json({ success: true, data: mockDb.orders });
+  try {
+    const data = await db.select().from(orders).orderBy(desc(orders.date));
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return NextResponse.json({ success: false, message: "Failed to fetch orders" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -20,12 +27,11 @@ export async function POST(request: Request) {
       phone: body.phone,
       items: body.items,
       total: Number(body.total),
-      status: "Pending" as const,
+      status: "Pending",
       date: new Date().toISOString().split("T")[0],
     };
     
-    // Add to the beginning of the list
-    mockDb.orders.unshift(newOrder);
+    await db.insert(orders).values(newOrder);
     
     return NextResponse.json({ success: true, data: newOrder }, { status: 201 });
   } catch (error) {

@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
-import { mockDb } from "@/lib/mockDb";
+import { db } from "@/db";
+import { menuItems } from "@/db/schema";
 
 export async function GET() {
-  return NextResponse.json({ success: true, data: mockDb.menuItems });
+  try {
+    const data = await db.select().from(menuItems);
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return NextResponse.json({ success: false, message: "Failed to fetch menu items" }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -24,7 +30,7 @@ export async function POST(request: Request) {
       description: body.description || "",
     };
     
-    mockDb.menuItems.push(newItem);
+    await db.insert(menuItems).values(newItem);
     
     return NextResponse.json({ success: true, data: newItem }, { status: 201 });
   } catch (error) {
