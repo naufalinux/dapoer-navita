@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { MessageSquare, X, Send } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { MessageSquare, X, Send, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import ReactMarkdown from 'react-markdown';
 
 type Message = {
   id: string;
@@ -15,33 +16,74 @@ export default function ChatbotWidget() {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin");
   const [isOpen, setIsOpen] = useState(false);
+  const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: "1",
+      id: "welcome-message",
       sender: "bot",
       text: "Halo! Selamat datang di Dapoer Navita. Ada yang bisa saya bantu hari ini?",
-    },
+    }
   ]);
-  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = (e: React.FormEvent) => {
+  // Auto-scroll to bottom of messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isOpen]);
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
-
-    // Add user message
-    const userMsg: Message = { id: Date.now().toString(), sender: "user", text: input };
-    setMessages((prev) => [...prev, userMsg]);
+    if (!input.trim() || isLoading) return;
+    
+    const userText = input;
     setInput("");
+    
+    const userMsg: Message = { id: Date.now().toString(), sender: 'user', text: userText };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setIsLoading(true);
 
-    // Simulate bot reply (UI only for now)
-    setTimeout(() => {
-      const botMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        sender: "bot",
-        text: "Terima kasih atas pesan Anda. Fitur AI Chatbot sedang dalam pengembangan.",
-      };
-      setMessages((prev) => [...prev, botMsg]);
-    }, 1000);
+    try {
+      // Convert to format expected by AI SDK
+      const apiMessages = newMessages.map(m => ({
+        role: m.sender === 'bot' ? 'assistant' : 'user',
+        content: m.text
+      }));
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: apiMessages })
+      });
+
+      if (!res.ok) throw new Error("API Error");
+
+      const botMsgId = (Date.now() + 1).toString();
+      setMessages(prev => [...prev, { id: botMsgId, sender: 'bot', text: '' }]);
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) return;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        
+        setMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last.id === botMsgId) {
+            return [...prev.slice(0, -1), { ...last, text: last.text + chunk }];
+          }
+          return prev;
+        });
+      }
+    } catch (error) {
+      setMessages(prev => [...prev, { id: Date.now().toString(), sender: 'bot', text: 'Maaf, terjadi kesalahan saat menghubungi server.' }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isAdmin) return null;
@@ -80,30 +122,39 @@ export default function ChatbotWidget() {
                 className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div 
-                  className={`max-w-[80%] p-3 rounded-2xl text-sm ${
+                  className={`max-w-[85%] p-3 rounded-2xl text-sm prose prose-sm ${
                     msg.sender === "user" 
-                      ? "bg-primary text-white rounded-tr-sm" 
-                      : "bg-white text-foreground border border-gray-100 shadow-sm rounded-tl-sm"
+                      ? "bg-primary text-white rounded-tr-sm prose-invert" 
+                      : "bg-white text-foreground border border-gray-100 shadow-sm rounded-tl-sm prose-p:my-1 prose-li:my-0.5"
                   }`}
                 >
-                  {msg.text}
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
                 </div>
               </div>
             ))}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white border border-gray-100 shadow-sm rounded-2xl rounded-tl-sm p-3">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
-          <form onSubmit={handleSend} className="p-3 bg-white border-t border-gray-100 flex gap-2">
+          <form onSubmit={handleFormSubmit} className="p-3 bg-white border-t border-gray-100 flex gap-2">
             <input 
               type="text" 
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Tanya menu hari ini..." 
               className="flex-1 bg-gray-100 text-sm rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              disabled={isLoading}
             />
             <button 
               type="submit"
-              disabled={!input.trim()}
+              disabled={!input.trim() || isLoading}
               className="p-2 bg-secondary text-white rounded-full hover:bg-secondary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="w-5 h-5" />

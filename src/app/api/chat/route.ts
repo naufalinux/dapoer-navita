@@ -1,47 +1,62 @@
-import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { settings } from "@/db/schema";
+import { settings, menuItems } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { streamText } from 'ai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
 
-export async function POST(request: Request) {
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
   try {
-    const { messages } = await request.json();
-    
+    const { messages } = await req.json();
+
     if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ success: false, message: "Invalid messages format" }, { status: 400 });
+      return new Response(JSON.stringify({ error: "Invalid messages format" }), { status: 400 });
     }
 
-    const lastUserMessage = messages[messages.length - 1]?.text || "";
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Fetch settings from DB
+    // Fetch settings and menu context
     const settingsData = await db.select().from(settings).where(eq(settings.id, 1));
-    const currentSettings = settingsData[0] || { isFailoverActive: false, systemPrompt: "" };
-
-    const aiEngine = currentSettings.isFailoverActive ? "Qwen 3 (Failover)" : "Gemini 2.5 Flash-lite";
-
-    let responseText = `[Powered by ${aiEngine}]\n\nTerima kasih atas pesannya! `;
+    const currentSettings = settingsData[0] || { isFailoverActive: false, systemPrompt: "", temperature: 0.2 };
     
-    // Simple mock logic based on keywords
-    if (lastUserMessage.toLowerCase().includes("menu") || lastUserMessage.toLowerCase().includes("makanan")) {
-      responseText += "Tentu, kami memiliki Nasi Ayam Geprek, Cumi Cabe Ijo, dan Nasi Box Uduk. Ada yang ingin Anda pesan?";
-    } else if (lastUserMessage.toLowerCase().includes("promo")) {
-      responseText += "Promo kami hari ini: Gratis Tahu Berontak untuk pembelian di atas Rp 100.000!";
-    } else {
-      responseText += "Saat ini fitur AI Chatbot sedang dalam tahap simulasi. Untuk pemesanan, silakan tambahkan ke keranjang dan checkout melalui WhatsApp!";
+    const menuData = await db.select().from(menuItems);
+    
+    // Dynamically inject inventory and pricing
+    let dynamicPrompt = currentSettings.systemPrompt;
+    if (menuData.length > 0) {
+      dynamicPrompt += "\n\n--- INVENTORY & PRICING CONTEXT ---\nHere is the current real-time menu availability:\n";
+      menuData.forEach(item => {
+        dynamicPrompt += `- ${item.name} (${item.category}): Rp ${item.price} - ${item.inStock && item.stockQuantity > 0 ? `In Stock (${item.stockQuantity} available)` : "OUT OF STOCK"}\n`;
+      });
+      dynamicPrompt += "\nImportant Rules for AI: Use this information to accurately answer customer queries. Do not offer items that are OUT OF STOCK. Do not promise prices or discounts different from what is listed here unless explicitly instructed otherwise in the system prompt. Keep answers concise, friendly, and helpful.";
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      data: {
-        id: Date.now().toString(),
-        sender: "bot",
-        text: responseText
-      }
+    let model;
+    if (currentSettings.isFailoverActive) {
+      // Qwen Failover via OpenAI compatible endpoint
+      const openai = createOpenAI({
+        apiKey: process.env.QWEN_API_KEY || '',
+        baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      });
+      model = openai('qwen-plus');
+    } else {
+      // Primary: Gemini
+      const google = createGoogleGenerativeAI({
+        apiKey: process.env.GEMINI_API_KEY || '',
+      });
+      model = google('gemini-2.5-flash');
+    }
+
+    const result = streamText({
+      model,
+      messages,
+      system: dynamicPrompt,
+      temperature: currentSettings.temperature !== undefined ? currentSettings.temperature : 0.2,
     });
+
+    return result.toTextStreamResponse();
   } catch (error) {
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 });
+    console.error("Chat API Error:", error);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }

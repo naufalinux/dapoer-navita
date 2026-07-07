@@ -1,19 +1,49 @@
 "use client";
 
-import { useState } from "react";
-import { Save, Bot, ServerCrash, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Save, Bot, ServerCrash, AlertCircle, SlidersHorizontal } from "lucide-react";
 
 export default function ChatbotSettings() {
   const [systemPrompt, setSystemPrompt] = useState(
-    "Anda adalah asisten AI untuk Dapoer Navita, sebuah bisnis katering dan rice bowl di Bogor.\nMenu kami hari ini:\n- Nasi Ayam Geprek (Rp 25.000)\n- Cumi Cabe Ijo (Rp 25.000)\n- Nasi Box Uduk (Rp 17.000)\n\nPromo Hari Ini: Gratis Tahu Berontak untuk pembelian di atas Rp 100.000."
+    "Anda adalah asisten AI ramah untuk Dapoer Navita. Anda harus sopan, tidak menjanjikan diskon fiktif, dan selalu arahkan pelanggan untuk memasukkan pesanan ke keranjang."
   );
   const [isFailoverActive, setIsFailoverActive] = useState(false);
+  const [temperature, setTemperature] = useState(0.2);
   const [isSaved, setIsSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSave = () => {
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+  useEffect(() => {
+    fetch("/api/settings/chatbot")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data) {
+          setSystemPrompt(data.data.systemPrompt || "");
+          setIsFailoverActive(data.data.isFailoverActive || false);
+          setTemperature(data.data.temperature !== undefined ? data.data.temperature : 0.2);
+        }
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch("/api/settings/chatbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ systemPrompt, isFailoverActive, temperature }),
+      });
+      if (res.ok) {
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 3000);
+      }
+    } catch (error) {
+      console.error("Failed to save settings", error);
+    }
   };
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-foreground/60">Loading settings...</div>;
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -54,6 +84,37 @@ export default function ChatbotSettings() {
               <AlertCircle className="w-4 h-4" />
               <span>Changes take effect immediately for all new chat sessions.</span>
             </div>
+          </div>
+        </div>
+
+        {/* Temperature Settings */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-blue-500/10 text-blue-600 rounded-lg">
+                <SlidersHorizontal className="w-5 h-5" />
+              </div>
+              <h2 className="text-lg font-bold font-serif text-foreground">Model Temperature</h2>
+            </div>
+            <p className="text-sm text-foreground/70">
+              Control the creativity of the AI responses. Lower values (0.0 - 0.3) make the AI more factual and focused, ideal for customer service. Higher values make it more creative but prone to hallucination.
+            </p>
+          </div>
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-medium text-foreground/80">Factual</span>
+              <span className="font-bold text-primary">{temperature.toFixed(2)}</span>
+              <span className="text-sm font-medium text-foreground/80">Creative</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={temperature}
+              onChange={(e) => setTemperature(parseFloat(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+            />
           </div>
         </div>
 

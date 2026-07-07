@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const data = await db.select().from(settings).where(eq(settings.id, 1));
     if (data.length === 0) {
-      return NextResponse.json({ success: true, data: { systemPrompt: "", isFailoverActive: false } });
+      return NextResponse.json({ success: true, data: { systemPrompt: "", isFailoverActive: false, temperature: 0.2 } });
     }
     return NextResponse.json({ success: true, data: data[0] });
   } catch (error) {
@@ -26,11 +26,13 @@ export async function POST(request: Request) {
         id: 1,
         systemPrompt: body.systemPrompt || "",
         isFailoverActive: body.isFailoverActive || false,
+        temperature: body.temperature !== undefined ? body.temperature : 0.2,
       });
     } else {
       const updateData: any = {};
       if (body.systemPrompt !== undefined) updateData.systemPrompt = body.systemPrompt;
       if (body.isFailoverActive !== undefined) updateData.isFailoverActive = body.isFailoverActive;
+      if (body.temperature !== undefined) updateData.temperature = body.temperature;
       
       await db.update(settings).set(updateData).where(eq(settings.id, 1));
     }

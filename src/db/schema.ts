@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 
 export type DaySchedule = {
   isOpen: boolean;
@@ -53,4 +53,5 @@ export const settings = sqliteTable('settings', {
   isFailoverActive: integer('is_failover_active', { mode: 'boolean' }).notNull().default(false),
   isStoreOpen: integer('is_store_open', { mode: 'boolean' }).notNull().default(true),
   schedule: text('schedule', { mode: 'json' }).$type<StoreSchedule>().notNull().default(defaultSchedule),
+  temperature: real('temperature').notNull().default(0.2),
 });
