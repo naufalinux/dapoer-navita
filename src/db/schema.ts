@@ -5,6 +5,7 @@ export const menuItems = sqliteTable('menu_items', {
   name: text('name').notNull(),
   category: text('category').notNull(),
   price: integer('price').notNull(),
+  stockQuantity: integer('stock_quantity').notNull().default(0),
   inStock: integer('in_stock', { mode: 'boolean' }).notNull().default(true),
   image: text('image').notNull(),
   description: text('description').notNull(),
