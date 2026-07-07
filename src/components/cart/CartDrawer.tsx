@@ -66,17 +66,21 @@ export default function CartDrawer() {
                       <span className="font-semibold text-sm w-4 text-center">{item.quantity}</span>
                       <button 
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="hover:text-primary transition-colors"
+                        disabled={item.quantity >= (item.stockQuantity || 0)}
+                        className={`transition-colors ${item.quantity >= (item.stockQuantity || 0) ? "text-gray-300 cursor-not-allowed" : "hover:text-primary"}`}
                       >
                         <Plus className="w-4 h-4" />
                       </button>
                     </div>
-                    <button 
-                      onClick={() => removeItem(item.id)}
-                      className="text-xs text-red-500 hover:underline"
-                    >
-                      Remove
-                    </button>
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs text-gray-500 mb-1">Max: {item.stockQuantity || 0}</span>
+                      <button 
+                        onClick={() => removeItem(item.id)}
+                        className="text-xs text-red-500 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

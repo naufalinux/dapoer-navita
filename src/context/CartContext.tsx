@@ -25,11 +25,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = (item: MenuItem) => {
     setItems((currentItems) => {
       const existingItem = currentItems.find((i) => i.id === item.id);
+      const maxQty = item.stockQuantity || 0;
+      
       if (existingItem) {
+        if (existingItem.quantity >= maxQty) return currentItems;
         return currentItems.map((i) =>
           i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
+      
+      if (maxQty < 1) return currentItems;
       return [...currentItems, { ...item, quantity: 1 }];
     });
     setIsCartOpen(true);
@@ -45,7 +50,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
     setItems((currentItems) =>
-      currentItems.map((i) => (i.id === id ? { ...i, quantity } : i))
+      currentItems.map((i) => {
+        if (i.id === id) {
+          const maxQty = i.stockQuantity || 0;
+          return { ...i, quantity: quantity > maxQty ? maxQty : quantity };
+        }
+        return i;
+      })
     );
   };
 
