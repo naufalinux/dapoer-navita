@@ -18,9 +18,9 @@ export async function POST(req: Request) {
     // Fetch settings and menu context
     const settingsData = await db.select().from(settings).where(eq(settings.id, 1));
     const currentSettings = settingsData[0] || { isFailoverActive: false, systemPrompt: "", temperature: 0.2 };
-    
+
     const menuData = await db.select().from(menuItems);
-    
+
     // Dynamically inject inventory and pricing
     let dynamicPrompt = currentSettings.systemPrompt;
     if (menuData.length > 0) {
@@ -38,13 +38,13 @@ export async function POST(req: Request) {
         apiKey: process.env.QWEN_API_KEY || '',
         baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
       });
-      model = openai('qwen-plus');
+      model = openai('qwen3-asr-flash');
     } else {
       // Primary: Gemini
       const google = createGoogleGenerativeAI({
         apiKey: process.env.GEMINI_API_KEY || '',
       });
-      model = google('gemini-2.5-flash');
+      model = google('gemini-2.5-flash-lite');
     }
 
     const result = streamText({
